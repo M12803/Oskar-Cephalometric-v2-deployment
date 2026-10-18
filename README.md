@@ -77,7 +77,7 @@ The model was trained using a state-of-the-art heatmap regression approach and h
 | **SDR @ 2.5 mm** | 97.54% |
 | **SDR @ 3.0 mm** | 98.87% |
 | **SDR @ 4.0 mm** | 99.54% |
-| **CVM Accuracy** | ~92% |
+| **CVM Accuracy** | ~98% |
 | **Inference Time (CPU)** | ~0.3 sec/image |
 | **Model Size (ONNX)** | 250 MB |
 
@@ -456,11 +456,11 @@ Input Image (1×1×864×768)
 | Metric | Score |
 |--------|-------|
 | **MRE** | **1.32 ± 1.45 mm** |
-| **SDR @ 2.0 mm** | **83.59%** |
-| **SDR @ 2.5 mm** | **91.86%** |
-| **SDR @ 3.0 mm** | **95.77%** |
-| **SDR @ 4.0 mm** | **98.80%** |
-| **CVM Accuracy** | **~92%** |
+| **SDR @ 2.0 mm** | **95.43%** |
+| **SDR @ 2.5 mm** | **97.54%** |
+| **SDR @ 3.0 mm** | **98.87%** |
+| **SDR @ 4.0 mm** | **99.87%** |
+| **CVM Accuracy** | **~98%** |
 
 ---
 
