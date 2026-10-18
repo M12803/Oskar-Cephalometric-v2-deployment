@@ -1,8 +1,8 @@
-# ========================================================
-# Oskar Cephalo v2 Deployment - Git Ignore
-# ========================================================
+# ==============================================================
+# Oskar Cephalo v2 Deployment — .gitignore
+# ==============================================================
 
-# Python & Caches
+# ─── Python Caches & Build Artifacts ──────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,15 +23,17 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.manifest
+*.spec
 
-# Virtual Environments
+# ─── Virtual Environments ────────────────────────────────────
 venv/
 .venv/
 env/
 .env/
 ENV/
 
-# Large Datasets & Raw Medical Files (DO NOT PUSH)
+# ─── Large Datasets & Raw Medical Files (NEVER PUSH) ────────
 /data/
 /dataset/
 /datasets/
@@ -42,17 +44,39 @@ ENV/
 *.dicom
 *.tar.gz
 *.zip
+*.rar
+*.7z
 
-# PyTorch Training Artifacts & Old Checkpoints
+# ─── PyTorch Training Artifacts & Old Checkpoints ────────────
 checkpoints/
 *.pth
 *.pt
 *.ckpt
 *.h5
+*.pkl
 logs/
 events.out.tfevents.*
+runs/
 
-# OS generated files
+# ─── Old Project Files (from "final v1" parent folder) ───────
+# These belong to the training workspace, not deployment
+/train*.py
+/dataset*.py
+/config*.py
+/Aariz*/
+/CL-detection*/
+/ISBI*/
+
+# ─── IDE & Editor ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# ─── OS Generated Files ─────────────────────────────────────
 .DS_Store
 .DS_Store?
 ._*
@@ -60,11 +84,27 @@ events.out.tfevents.*
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Large Model Files
-# Note: GitHub limits single files to 100MB.
-# oskar_cephalo.onnx is ~250MB and should be tracked via Git LFS:
-#   git lfs install
-#   git lfs track "*.onnx"
-# If not using Git LFS, uncomment the line below to exclude the binary:
+# ─── Jupyter Notebooks ──────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── Testing & Coverage ─────────────────────────────────────
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# ─── Docker ──────────────────────────────────────────────────
+*.log
+docker-compose.override.yml
+
+# ─── Large Model Files ──────────────────────────────────────
+# oskar_cephalo.onnx is ~250 MB and MUST be tracked via Git LFS.
+# If not using Git LFS, uncomment the line below to exclude it:
 # *.onnx
