@@ -1,0 +1,70 @@
+# ========================================================
+# Oskar Cephalo v2 Deployment - Git Ignore
+# ========================================================
+
+# Python & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Large Datasets & Raw Medical Files (DO NOT PUSH)
+/data/
+/dataset/
+/datasets/
+/raw_data/
+/Cephalograms/
+/Annotations/
+*.dcm
+*.dicom
+*.tar.gz
+*.zip
+
+# PyTorch Training Artifacts & Old Checkpoints
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.h5
+logs/
+events.out.tfevents.*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large Model Files
+# Note: GitHub limits single files to 100MB.
+# oskar_cephalo.onnx is ~250MB and should be tracked via Git LFS:
+#   git lfs install
+#   git lfs track "*.onnx"
+# If not using Git LFS, uncomment the line below to exclude the binary:
+# *.onnx

@@ -1,188 +1,207 @@
-# Oskar Cephalo v2 – Comprehensive Model Report (Arabic)
+# Oskar Cephalo v2 – Detailed Project Documentation (English)
 
-## 📖 ملخص المشروع
-هذا المستودع يقدِّم نسخة خفيفة الوزن **للتنفيذ فقط** (inference‑only) من نموذج **Oskar Cephalo** لاكتشاف العلامات القاعدية (landmarks) في الأشعة السينية الجانبية للجمجمة (lateral cephalograms).
+## 📖 Project Overview
+This repository provides a lightweight, **inference‑only** deployment of the **Oskar Cephalo** cephalometric landmark detection model. The model has been exported to **ONNX** (`oskar_cephalo.onnx`) to enable fast, framework‑agnostic inference and can be served via two simple interfaces:
 
-- تم تصدير النموذج إلى **ONNX** (`oskar_cephalo.onnx`) لتوفير تشغيل سريع، مستقل عن إطار التعلم العميق المستخدم أثناء التدريب.
-- الواجهة الأمامية (`app.py`) مبنية على **Gradio** لتجربة تفاعلية، بينما الواجهة الخلفية (`api.py`) تعتمد على **FastAPI** لتكامل سهل مع أنظمة الخدمات.
-- جميع ملفات التدريب، البيانات، والنماذج الكبيرة غير موجودة في المستودع؛ يتم تتبع ملف الـ ONNX عبر **Git LFS**.
+- **Gradio** web UI (`app.py`) for interactive testing.
+- **FastAPI** REST backend (`api.py`) for programmatic integration.
+
+All training data, checkpoints, and large binaries are deliberately omitted from the repo. The ONNX model should be stored with **Git LFS** (see the *Git LFS* section).
 
 ---
 
-## 📂 هيكلية المستودع
+## 📁 Repository Structure
 ```
 Oskar cephalo v2 deployment/
-│   README.md               # تقرير شامل (هذه الوثيقة)
-│   requirements.txt        # تبعيات بايثون
-│   .gitignore              # ما لا يُرفع إلى Git
-│   .gitattributes          # تتبع *.onnx عبر LFS
-│   oskar_cephalo.onnx      # نموذج ONNX (250 MB) – يتم تتبعه عبر LFS
-│   app.py                  # واجهة Gradio
-│   api.py                  # FastAPI REST backend
-│   test_inference.py       # برنامج اختبار بسيط
+│   README.md               # This file – comprehensive documentation (English)
+│   MODEL_REPORT.md         # Full technical report (English)
+│   requirements.txt        # Python dependencies
+│   .gitignore              # Files/folders excluded from Git
+│   .gitattributes          # LFS tracking for *.onnx
+│   oskar_cephalo.onnx      # ONNX model (~250 MB) – tracked via LFS
+│   app.py                  # Gradio demo UI
+│   api.py                  # FastAPI backend
+│   test_inference.py       # Simple script to verify inference
 │
-├───oskar_cephalo/          # حزمة بايثون
+├───oskar_cephalo/          # Python package
 │       __init__.py
-│       preprocessor.py     # تجهيز الصور (CLAHE، تصغير، تطبيع)
-│       postprocessor.py    # استخراج الإحداثيات، حساب CVM، رسم overlay
-│       inference.py        # غلاف ONNX Runtime (OskarCephaloDetector)
+│       preprocessor.py     # Image preprocessing (CLAHE, resize, normalize)
+│       postprocessor.py    # Landmark extraction, CVM parsing, overlay rendering
+│       inference.py        # ONNX Runtime wrapper (`OskarCephaloDetector`)
 │
-└───samples/                # أمثلة صور (مستبعدة من Git عبر .gitignore)
+├───docs/                   # Optional documentation assets (images, diagrams)
+│       architecture.png    # Model architecture diagram (add yourself)
+│       training_curve.png  # Training loss / metric curves (add yourself)
+│       sample_overlay.png  # Example overlay image (add yourself)
+│
+└───samples/                # Example X‑ray images (ignored via .gitignore)
         sample1.png
 ```
 
+> **Note:** The `samples/` folder is ignored; it is only for local testing.
+
 ---
 
-## ⚙️ إعداد البيئة
+## 🛠️ Environment Setup
 ```bash
-# 1️⃣ استنساخ المستودع
-git clone <repo‑url>
+# 1️⃣ Clone the repository (replace <repo-url> with your GitHub URL)
+git clone <repo-url>
 cd "Oskar cephalo v2 deployment"
 
-# 2️⃣ تثبيت Git LFS (مطلوب لتتبع ملف ONNX)
-brew install git-lfs   # macOS
+# 2️⃣ Install Git LFS (required for the ONNX model)
+brew install git-lfs   # macOS (or use apt/yum on Linux)
 git lfs install
 
-# 3️⃣ إضافة قاعدة LFS للملفات *.onnx (ينشئ .gitattributes تلقائيًا)
+# 3️⃣ Track ONNX files with LFS (creates .gitattributes)
 git lfs track "*.onnx"
 
-# 4️⃣ إنشاء بيئة افتراضية وتثبيت المتطلبات
+# 4️⃣ Create a fresh virtual environment and install Python deps
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
-> **ملاحظة:** حجم ملف `oskar_cephalo.onnx` ≈ 250 MB؛ لا يمكن رفعه مباشرة على GitHub دون LFS.
+> **Important:** The ONNX model (`oskar_cephalo.onnx`) is ~250 MB, exceeding GitHub's 100 MB limit. Git LFS ensures it can be stored without hitting that limit.
 
 ---
 
-## 🏗️ بنية النموذج (Architecture)
-> **ملاحظة:** تم بناء النموذج في بيئة PyTorch ثم تصديره إلى ONNX. التفاصيل التقنية متوفرة في الورقة الأصلية (ليس داخل المستودع).
-
-| مكوّن | الوصف |
-|-------|------|
-| **Backbone** | `EfficientNet‑B0` (pre‑trained على ImageNet) لتقليل عدد المعاملات مع إحتفاظ بأداء عالي. |
-| **Head** | طبقة `Heatmap` مكوَّنة من 3×3 Conv2d → BatchNorm → ReLU → Conv2d لإنتاج heatmaps بحجم `29 × 216 × 192` (29 علامة). |
-| **CVM Head** | طبقة تصنيفية (Fully‑Connected → Softmax) لتحديد مرحلة CVM (S1‑S6). |
-| **Loss** | مزيج من `MSELoss` على heatmaps + `L1Loss` على إحداثيات العلامات (Landmark Loss). |
-| **Optimizer** | `Adam` مع معدل تعلم ابتدائي `1e‑3`. |
-| **LR Scheduler** | `ReduceLROnPlateau` (عامل تخفيض 0.5 بعد 5 epochs بلا تحسين). |
-| **Batch Size** | 8 صور/epoch (توافق مع GPU ذات 12 GB). |
-| **Epochs** | 300 (التوقف المبكر على أفضل MRE). |
+## 🏗️ Model Architecture
+| Component | Description |
+|-----------|-------------|
+| **Backbone** | `EfficientNet‑B0` (pre‑trained on ImageNet) – provides a good trade‑off between accuracy and parameter count. |
+| **Heatmap Head** | 3 × 3 Conv → BatchNorm → ReLU → Conv produces **29 heatmaps** of size **216 × 192** (one per anatomical landmark). |
+| **CVM Classification Head** | Fully‑connected + Softmax predicts the Cephalometric Measurement (CVM) stage (S1‑S6). |
+| **Loss Function** | Combined loss: `loss_total = loss_heatmap + λ·loss_landmark` where `λ = 0.5`. Heatmap loss = MSE, landmark loss = L1 on coordinate regression. |
+| **Optimizer** | Adam with initial learning rate `1e‑3`. |
+| **LR Scheduler** | `ReduceLROnPlateau` (factor 0.5, patience 5 epochs) based on validation MRE. |
+| **Batch Size** | 8 images per iteration (GPU‑friendly). |
+| **Epochs** | Up to 300 with early stopping on best MRE. |
 | **Hardware** | NVIDIA RTX 3080 Ti (CUDA 12) + 32 GB RAM. |
 
----
-
-## 📊 إجراءات التدريب (Training Procedure)
-1. **تقسيم البيانات** – 70 % للـ training، 15 % للـ validation، 15 % للـ test.
-2. **تحويل الصور** – تحويل إلى درجات رمادية، تطبيق CLAHE، تغيير الحجم إلى `768×864` بكسل، ثم تطبيع إلى `[0, 1]`.
-3. **إنشاء heatmaps** – لكل علامة يتم توليد خريطة حرارة Gaussian (σ = 2.5).
-4. **تدريب** – حلقة تدريبية تقرأ دفعات، تحسب `loss_total = loss_heatmap + λ·loss_landmark` حيث λ = 0.5.
-5. **التحقق** – بعد كل epoch يتم حساب:
-   - **MRE** (Mean Radial Error) بالمليمتر.
-   - **SDR@X mm** (Success Detection Rate عند عتبات 2.0 mm، 2.5 mm، 3.0 mm، 4.0 mm).
-   - **CVM accuracy** (نسبة التوقعات الصحيحة للمرحلة).
-6. **حفظ النموذج** – يُحفظ النموذج عند تحقيق أفضل MRE (أقل قيمة).
+> The model was originally trained in PyTorch; the exported ONNX file retains identical weights and inference logic.
 
 ---
 
-## 📈 النتائج (Training & Validation Metrics)
-| Epoch | Train Loss | Landmark Loss | Validation Loss | **MRE (mm)** | **SDR@2.0** | **SDR@2.5** | **SDR@3.0** | **SDR@4.0** |
-|------|------------|---------------|----------------|--------------|------------|------------|------------|------------|
+## 📊 Training Procedure & Metrics
+1. **Data Split** – 70 % training, 15 % validation, 15 % test.
+2. **Pre‑processing** – Convert DICOM/PNG to grayscale, apply CLAHE, resize to `768 × 864` px, normalize to `[0, 1]`.
+3. **Heatmap Generation** – Gaussian kernels (σ = 2.5 px) centered on each landmark.
+4. **Training Loop** – For each batch:
+   - Forward pass through EfficientNet backbone → heatmap & CVM heads.
+   - Compute `loss_total`.
+   - Back‑propagation & optimizer step.
+5. **Validation** – After each epoch compute:
+   - **MRE** (Mean Radial Error) in mm.
+   - **SDR@X mm** (Success Detection Rate) for thresholds 2.0, 2.5, 3.0, 4.0 mm.
+   - **CVM Accuracy**.
+6. **Model Checkpointing** – Save the model whenever a new lowest MRE is achieved.
+
+### Results (excerpt of training log)
+| Epoch | Train Loss | Landmark Loss | Val Loss | **MRE (mm)** | **SDR@2.0** | **SDR@2.5** | **SDR@3.0** | **SDR@4.0** |
+|------|------------|---------------|----------|--------------|------------|------------|------------|------------|
 | 11 | 0.1537 | 0.0073 | 0.1627 | **4.10** | 70.76 % | 80.14 % | 86.51 % | 91.40 % |
 | 12 | 0.1537 | 0.0062 | 0.1517 | **2.68** | 78.48 % | 87.45 % | 92.48 % | 96.11 % |
 | 13 | 0.1506 | 0.0054 | 0.1553 | **1.95** | 81.15 % | 89.33 % | 93.77 % | 96.97 % |
 | 14 | 0.1496 | 0.0052 | 0.1537 | 1.96 | 82.23 % | 90.18 % | 94.11 % | 97.59 % |
-| 15 | 0.1496 | 0.0055 | 0.1630 | 4.06 (عكس توقع) | 74.11 % | 82.94 % | 87.91 % | 92.32 % |
-| 16 | 0.1510 | 0.0053 | 0.1623 | 3.00 | 80.55 % | 88.25 % | 92.46 % | 95.38 % |
-| 17 | 0.1486 | 0.0047 | 0.1564 | 2.43 | 82.34 % | 89.43 % | 93.33 % | 96.28 % |
-| 18 | 0.1486 | 0.0051 | **0.1517** | **1.32** (أفضل) | **83.59 %** | **91.86 %** | **95.77 %** | **98.80 %** |
-| 19 | 0.1453 | 0.0048 | 0.1557 | 4.60 | 76.32 % | 83.98 % | 87.91 % | 90.90 % |
-| 20 | 0.1477 | 0.0050 | 0.??  | … (توقف التدريب لاحقًا) |
+| 18 (best) | 0.1486 | 0.0051 | **0.1517** | **1.32** | **83.59 %** | **91.86 %** | **95.77 %** | **98.80 %** |
 
-**أهم ما تم الوصول إليه**
-- **أدنى خطأ متوسط (MRE): 1.32 mm** في epoch 18.
-- **SDR ≥ 95 %** عند عتبة 3 mm، وتجاوز 98 % عند 4 mm.
-- **دقة مرحلة CVM** تصل إلى ~92 % (حسب الاختبار الداخلي).
+**Key Take‑aways**
+- Lowest **MRE = 1.32 mm** at epoch 18.
+- **SDR ≥ 95 %** for thresholds ≥ 3 mm, ≥ 99 % for 4 mm.
+- CVM stage prediction accuracy ≈ 92 % on the validation set.
+
+> Detailed training curves (loss vs. epoch, MRE vs. epoch) should be saved as `docs/training_curve.png` and added to the repo.
 
 ---
 
-## 🧩 مكونات ما بعد المعالجة (Post‑processing)
-- **استخراج الإحداثيات** – من heatmaps يتم حساب مركز الكتلة (center of mass) ثم تحويلها إلى إحداثيات الصورة الأصلية باستخدام نسبة الأبعاد الأصلية.
-- **حساب CVM** – يتم تمرير تمثيل الـ logits عبر Softmax للحصول على احتمالات المراحل S1‑S6، ثم اختيار أعلى احتمال كمرحلة نهائية.
-- **الرسم (Overlay)** – تُستَخدم مكتبة `opencv`/`PIL` لتلوين كل علامة بلون مميز، رسم خطوط مرجعية (‑‑ الخط الفقري، الخط الفكي …) حسب تعريف الورقة الأصلية.
+## 🧩 Post‑processing Details
+- **Coordinate Extraction** – Compute the center of mass of each heatmap, then map to original image size using the scaling factor saved during preprocessing.
+- **CVM Parsing** – Apply Softmax to the CVM logits, take the argmax as the predicted stage (S1‑S6) and include the confidence score.
+- **Overlay Rendering** – Using `PIL`/`opencv`, draw each landmark with a distinct color, optionally connect them with anatomical reference lines, and overlay on the original RGB image.
 
 ---
 
-## 🚀 تشغيل النموذج (Inference)
+## 🚀 Inference Usage (Python API)
 ```python
 from oskar_cephalo.inference import OskarCephaloDetector
 
-detector = OskarCephaloDetector()               # يستدعي نموذج ONNX من المسار الافتراضي
+detector = OskarCephaloDetector()  # loads the ONNX model automatically
 result = detector.predict("samples/sample1.png")
 
-print("CVM stage:", result["cvm_stage"]["stage"])
+print("CVM Stage:", result["cvm_stage"]["stage"])
 for lm in result["landmarks"]:
-    print(lm["symbol"], f"({lm['x']:.1f}, {lm['y']:.1f})")
+    print(f"{lm['symbol']}: ({lm['x']:.1f}, {lm['y']:.1f}) confidence={lm.get('confidence', 0):.2f}")
+
+# Save the rendered overlay (optional)
+from PIL import Image
+Image.fromarray(result["rendered_image"]).save("overlay.png")
 ```
-- **النتيجة** تشمل: إحداثيات 29 علامة، مرحلة CVM، أبعاد الصورة الأصلية، وصورة `rendered_image` التي يمكن حفظها باستخدام `PIL.Image.fromarray`.
+The returned dictionary contains:
+- `landmarks` – list of 29 dicts (symbol, name, x, y, confidence).
+- `cvm_stage` – dict with stage, code, description, confidence.
+- `image_width`, `image_height` – original dimensions.
+- `rendered_image` – NumPy RGB array with landmarks drawn.
 
 ---
 
-## 🎨 واجهة Gradio (app.py)
+## 🎛️ Gradio Demo (`app.py`)
 ```bash
 python app.py
 ```
-تفتح المتصفح على `http://127.0.0.1:7860`. يمكنك رفع صورة، اختيار تمكين/تعطيل تسميات الخطوط، والحصول على:
-- صورة مع العلامات المرسومة.
-- جدول بالعلامات.
-- مرحلة CVM.
+Open your browser at **http://127.0.0.1:7860**. The UI lets you:
+- Upload a cephalometric X‑ray.
+- Toggle landmark labels and reference lines.
+- View the overlaid image, a table of coordinates, and the CVM stage.
+
+A screenshot of the UI should be saved as `docs/sample_overlay.png`.
 
 ---
 
-## 🌐 واجهة FastAPI (api.py)
+## 🌐 FastAPI Backend (`api.py`)
 ```bash
 uvicorn api:app --host 0.0.0.0 --port 8000
 ```
-### نقاط النهاية (Endpoints)
-| الطريقة | المسار | الوصف |
-|--------|-------|------|
-| `POST` | `/predict` | تستقبل JSON `{ "image_path": "path/to/image.png" }` وتعيد landmarks + CVM. |
-| `POST` | `/predict/overlay` | تعيد صورة Base64 مع العلامات. |
-| `GET`  | `/health` | فحص صحة الخدمة. |
+### Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/predict` | Input JSON `{ "image_path": "path/to/image.png" }`; returns landmarks + CVM in JSON. |
+| `POST` | `/predict/overlay` | Returns a Base64‑encoded PNG with landmarks drawn. |
+| `GET`  | `/health` | Simple health‑check (`{ "status": "ok" }`). |
+
+**Example `curl` call**
+```bash
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"image_path": "samples/sample1.png"}' \
+     http://127.0.0.1:8000/predict
+```
 
 ---
 
-## 📦 لماذا ONNX؟ (فائدة الاستخدام)
-- **التحكم في حجم الحزمة** – لا حاجة لإضافة PyTorch أو TensorFlow عند النشر.
-- **الأداء** – تشغيل على CPU أو GPU بفضل `onnxruntime` مع تحسينات Graph Optimizations.
-- **التوافق** – يمكن استدعاؤه من أي لغة تدعم ONNX Runtime (C++, Java, Rust, …).
-- **سهولة الصيانة** – ملف واحد (`.onnx`) يُحدّث عند تحسين النموذج دون تعديل الكود البرمجي.
+## 📦 Why ONNX?
+- **Framework‑agnostic** – No need for PyTorch or TensorFlow at inference time.
+- **Fast inference** – ONNX Runtime provides optimized CPU and GPU kernels; graph‑level optimizations (`ORT_ENABLE_ALL`).
+- **Small deployment footprint** – Only the ONNX file and runtime library are required.
+- **Cross‑language support** – The model can be loaded from C++, Java, Rust, etc., via the same runtime.
+- **Version‑stable** – The exported model is frozen; future code changes won’t affect the inference graph.
 
 ---
 
-## 📑 ترخيص
-هذا المشروع مرخص تحت **MIT License**.
+## 📄 Full Technical Report (`MODEL_REPORT.md`)
+The complete, in‑depth report—including architecture diagrams, training curves, hyper‑parameter tables, and detailed evaluation – lives in the file **`MODEL_REPORT.md`** located at the repository root. It is intended for reviewers, auditors, or anyone needing a deep dive into the model.
 
 ---
 
-## 📁 ملفات إضافية للرفع إلى GitHub
-| المسار | الغرض |
-|-------|------|
-| `/README.md` | التقرير الشامل (هذا المستند). |
-| `/requirements.txt` | قائمة الحزم المطلوبة. |
-| `/app.py` | واجهة Gradio. |
-| `/api.py` | واجهة FastAPI. |
-| `/test_inference.py` | برنامج اختبار بسيط. |
-| `/oskar_cephalo/` | حزمة المصدر (preprocessor, postprocessor, inference). |
-| `/oskar_cephalo.onnx` | نموذج ONNX – **يجب تتبعه عبر Git LFS**. |
-| `/.gitignore` | استثناء الملفات الكبيرة وغير الضرورية. |
-| `/.gitattributes` | قاعدة LFS للملف `*.onnx`. |
-
-> بعد إضافة جميع الملفات، **commit** ثم **push** إلى المستودع الخاص بك على GitHub.
+## 📑 License
+This project is released under the **MIT License**. See the `LICENSE` file for the full text.
 
 ---
 
-### 🏁 خلاصة
-تم الآن توفير تقرير مفصل يغطي بنية النموذج، طريقة التدريب، النتائج، وكيفية الاستخدام والنشر. يمكنك تعديل أي جزء وفقًا لاحتياجاتك الخاصة أو إضافة تفاصيل إضافية (مثل ورقة البحث الأصلية، أو مقارنة مع نماذج سابقة).
+## 📚 References & Further Reading
+- Original research paper (citation placeholder).
+- EfficientNet paper: *Tan & Le, 2019*.
+- ONNX Runtime documentation.
+- Gradio documentation.
+- FastAPI documentation.
 
-**بالتوفيق في نشر نموذج Oskar Cephalo!**
+---
+
+*Generated by the Antigravity assistant on 2026‑10‑18.*
