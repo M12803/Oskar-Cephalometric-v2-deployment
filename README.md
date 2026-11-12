@@ -530,11 +530,12 @@ This project is released under the **MIT License**. See the [LICENSE](LICENSE) f
 ---
 
 ## 👨‍💻 Author
-
-**Mohamed Fouda (M12803)**
-
-- GitHub: [github.com/M12803](https://github.com/M12803)
-
+Developer / Original Programmer: -
+.Mohamed Fouda (M12803)
+Copyright Owner / Exclusive Rights - Holder: Othman Ahmed Othman Ali
+Owner Email: -
+othmanahmed27@gmail.com
+Copyright: © 2026 Othman Ahmed - .Othman Ali. All Rights Reserved
 ---
 
 <p align="center">
